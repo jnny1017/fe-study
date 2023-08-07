@@ -1,25 +1,75 @@
-import './App.css'
-import logo from './logo.svg'
+import { useCallback } from 'react'
+
+import { useMutation, useQueryClient } from 'react-query'
+import Error from './components/Error'
+import Loading from './components/Loading'
+import TodoForm from './components/todo/TodoForm'
+import TodoList from './components/todo/TodoList'
+import widthAsyncBoundary from './components/widthAsyncBoundary'
+import useAddTodo from './hooks/useAddTodo'
+import useTodos from './hooks/useTodos'
+import { deleteTodo, updateTodo } from './remote/todo'
+
+interface CustomError {
+  response: any
+}
 
 function App() {
+  const { data = [], isLoading, refetch } = useTodos()
+
+  const queryClient = useQueryClient()
+
+  const { addTodo } = useAddTodo({
+    onSuccess: () => {
+      return queryClient.invalidateQueries(useTodos.getKey())
+    },
+  })
+
+  const { mutate: onDeleteTodo } = useMutation(deleteTodo, {
+    onSuccess: () => {
+      return queryClient.invalidateQueries(useTodos.getKey())
+    },
+    onError: (err) => {
+      console.log((err as CustomError).response)
+    },
+  })
+
+  const { mutate: onEditTodo } = useMutation(updateTodo, {
+    onSuccess: () => {
+      return queryClient.invalidateQueries(useTodos.getKey())
+    },
+    onError: (err) => {
+      console.log((err as CustomError).response)
+    },
+  })
+
+  const handleAddTodo = useCallback(
+    (todo: string) => {
+      addTodo({
+        id: Date.now(),
+        todo,
+      })
+    },
+    [addTodo],
+  )
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <TodoForm onSubmit={handleAddTodo} />
+      <TodoList
+        todos={data}
+        onEdit={(id, todo) =>
+          onEditTodo({
+            id,
+            todo,
+          })
+        }
+        onDelete={(id) => onDeleteTodo(id)}
+      />
     </div>
   )
 }
 
-export default App
+export default widthAsyncBoundary(App, {
+  rejectFallback: <Error />,
+  pendingFallback: <Loading />,
+})
