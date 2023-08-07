@@ -1,5 +1,7 @@
+import { HTTPError } from 'ky'
 import { useMutation, useQueryClient } from 'react-query'
 
+import { Todo } from '@/interface/todo'
 import { postTodo } from '../remote/todo'
 import useTodos from './useTodos'
 
@@ -15,7 +17,7 @@ function useAddTodo({ onSuccess }: any) {
     onMutate: (newTodo) => {
       queryClient.cancelQueries(useTodos.getKey())
 
-      const prev = queryClient.getQueryData(useTodos.getKey())
+      const prev = queryClient.getQueryData<Todo[]>(useTodos.getKey())
 
       if (prev) {
         queryClient.setQueryData(useTodos.getKey(), [...prev, newTodo])
@@ -23,7 +25,7 @@ function useAddTodo({ onSuccess }: any) {
 
       return { prev }
     },
-    onError: (err, _, context) => {
+    onError: (err: HTTPError, _, context) => {
       console.log(err.response)
 
       if (context?.prev) {

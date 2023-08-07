@@ -1,18 +1,15 @@
+import { HTTPError } from 'ky'
 import { useCallback } from 'react'
-
 import { useMutation, useQueryClient } from 'react-query'
-import Error from './components/Error'
-import Loading from './components/Loading'
-import TodoForm from './components/todo/TodoForm'
-import TodoList from './components/todo/TodoList'
-import widthAsyncBoundary from './components/widthAsyncBoundary'
-import useAddTodo from './hooks/useAddTodo'
-import useTodos from './hooks/useTodos'
-import { deleteTodo, updateTodo } from './remote/todo'
 
-interface CustomError {
-  response: any
-}
+import Error from '@/components/Error'
+import Loading from '@/components/Loading'
+import TodoForm from '@/components/todo/TodoForm'
+import TodoList from '@/components/todo/TodoList'
+import widthAsyncBoundary from '@/components/widthAsyncBoundary'
+import useAddTodo from '@/hooks/useAddTodo'
+import useTodos from '@/hooks/useTodos'
+import { deleteTodo, updateTodo } from '@/remote/todo'
 
 function App() {
   const { data = [], isLoading, refetch } = useTodos()
@@ -29,8 +26,8 @@ function App() {
     onSuccess: () => {
       return queryClient.invalidateQueries(useTodos.getKey())
     },
-    onError: (err) => {
-      console.log((err as CustomError).response)
+    onError: (err: HTTPError) => {
+      console.log(err.response)
     },
   })
 
@@ -38,15 +35,15 @@ function App() {
     onSuccess: () => {
       return queryClient.invalidateQueries(useTodos.getKey())
     },
-    onError: (err) => {
-      console.log((err as CustomError).response)
+    onError: (err: HTTPError) => {
+      console.log(err.response)
     },
   })
 
   const handleAddTodo = useCallback(
     (todo: string) => {
       addTodo({
-        id: Date.now(),
+        id: number,
         todo,
       })
     },

@@ -1,12 +1,10 @@
 import { useState } from 'react'
 
+import { Todo } from '@/interface/todo'
 import Button from '../Button'
 
 interface Props {
-  todos: Array<{
-    id: number
-    todo: string
-  }>
+  todos: Array<Todo>
   onEdit: (id: number, newValue: string) => void
   onDelete: (id: number) => void
 }

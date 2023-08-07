@@ -1,20 +1,26 @@
-import { Suspense } from 'react'
+import { Suspense } from 'react';
+import ErrorBoundary from './ErrorBoundary';
 
-import ErrorBoundary from './ErrorBoundary'
-
-function widthAsyncBoundary(
+function withAsyncBoundary<
+  Props extends Record<string, unknown> = Record<string, never>,
+>(
   Component: () => JSX.Element,
-  { pendingFallback, rejectFallback }: any,
+  {
+    pendingFallback,
+    rejectFallback,
+  }: { pendingFallback: React.ReactNode; rejectFallback?: React.ReactNode },
 ) {
-  const Wrapper = (props: any) => {
-    ;<ErrorBoundary rejectFallback={rejectFallback}>
-      <Suspense fallback={pendingFallback}>
-        <Component {...props} />
-      </Suspense>
-    </ErrorBoundary>
+  const Wrapper = (props: Props) => {
+    return (
+      <ErrorBoundary rejectFallback={rejectFallback}>
+        <Suspense fallback={pendingFallback}>
+          <Component {...props} />
+        </Suspense>
+      </ErrorBoundary>
+    )
   }
 
   return Wrapper
 }
 
-export default widthAsyncBoundary
+export default withAsyncBoundary

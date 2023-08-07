@@ -1,4 +1,4 @@
-export interface Todos {
-  id: Date
+export interface Todo {
+  id: number
   todo: string
 }

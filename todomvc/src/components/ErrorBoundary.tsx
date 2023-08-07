@@ -1,7 +1,7 @@
 import { Component, PropsWithChildren } from 'react'
 
 interface Props {
-  fallback: any
+  rejectFallback?: React.ReactNode
 }
 
 interface State {
@@ -20,7 +20,11 @@ class ErrorBoundary extends Component<PropsWithChildren<Props>, State> {
 
   render() {
     if (this.state.hasError) {
-      return <div>에러발생</div>
+      return this.props.rejectFallback ? (
+        this.props.rejectFallback
+      ) : (
+        <div>에러발생</div>
+      )
     }
 
     return this.props.children
