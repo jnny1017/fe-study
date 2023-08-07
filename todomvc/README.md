@@ -1,1 +1,2 @@
-## todo-firebase - firebase 연동
+## TodoList
+- React, TypeScript
