@@ -1,69 +1,55 @@
+import { useCallback } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
 
 import TodoForm from './TodoForm';
 import TodoList from './TodoList';
+import widthAsyncBoundary from './components/widthAsyncBoundary';
+import useAddTodo from './hooks/useAddTodo';
 import useTodos from './hooks/useTodos';
-import { deleteTodo, postTodo, updateTodo } from './remote/todo';
+import { deleteTodo, updateTodo } from './remote/todo';
 
 function App() {
   const { data = [], isLoading, refetch } = useTodos();
 
   const queryClient = useQueryClient();
 
-  // queryClient.setQueryData
-  const { mutate: onAdd } = useMutation(postTodo, {
+  const { addTodo } = useAddTodo({
     onSuccess: () => {
-      return queryClient.invalidateQueries(['todos']);
-    },
-    onError: (err) => {
-      console.log(err.respose);
+      return queryClient.invalidateQueries(useTodos.getKey());
     },
   });
 
   const { mutate: onDeleteTodo } = useMutation(deleteTodo, {
     onSuccess: () => {
-      return queryClient.invalidateQueries(['todos']);
+      return queryClient.invalidateQueries(useTodos.getKey());
     },
     onError: (err) => {
-      console.log(err.respose);
+      console.log(err.response);
     },
   });
 
   const { mutate: onEditTodo } = useMutation(updateTodo, {
     onSuccess: () => {
-      return queryClient.invalidateQueries(['todos']);
+      return queryClient.invalidateQueries(useTodos.getKey());
     },
     onError: (err) => {
-      console.log(err.respose);
+      console.log(err.response);
     },
   });
 
-  if (isLoading === false) {
-    <>
-      <TodoForm
-        onSubmit={(todo) =>
-          onAdd({
-            id: Date.now(),
-            todo,
-          })
-        }
-      />
-      <div style={{ wdith: `100%`, height: 20, background: `green` }}></div>
-      <div style={{ wdith: `100%`, height: 20, background: `green` }}></div>
-      <div style={{ wdith: `100%`, height: 120, background: `orange` }}></div>
-    </>;
-  }
+  const handleAddTodo = useCallback(
+    (todo) => {
+      addTodo({
+        id: Date.now(),
+        todo,
+      });
+    },
+    [addTodo]
+  );
 
   return (
     <div>
-      <TodoForm
-        onSubmit={(todo) =>
-          onAdd({
-            id: Date.now(),
-            todo,
-          })
-        }
-      />
+      <TodoForm onSubmit={handleAddTodo} />
       <TodoList
         todos={data}
         onEdit={(id, todo) =>
@@ -78,4 +64,13 @@ function App() {
   );
 }
 
-export default App;
+export default widthAsyncBoundary(App, {
+  rejectFallback: <div>todo 에러발생</div>,
+  pendingFallback: (
+    <>
+      <div style={{ width: `100%`, height: 20, background: `green` }}></div>
+      <div style={{ width: `100%`, height: 20, background: `green` }}></div>
+      <div style={{ width: `100%`, height: 120, background: `orange` }}></div>
+    </>
+  ),
+});
