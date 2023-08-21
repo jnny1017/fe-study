@@ -1,2 +1,0 @@
-## TodoList
-- React, Firebase
