@@ -12,32 +12,40 @@ import Button from '@/components/Shared/Button'
 import FormHelperText from '@/components/Shared/FormHelperText'
 import TextField from '@/components/Shared/TextField'
 import useForm from '@/hooks/form/useForm'
-import { Account } from '@/model/account'
+import useSignUp from '@/hooks/useSignUp'
 import { css } from '@emotion/react'
+import debounce from 'lodash/debounce'
+import { useNavigate } from 'react-router-dom'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
+
 
 const style = css`
   display: flex;
   flex-direction: column;
   gap: 6px;
 `
-interface Props {
-  onSubmit: (data: Account) => void
-}
 
-export default function SignUpForm({ onSubmit }: Props) {
-  const { email, password, confirmedPassword, name } =
-    useRecoilValue(accountState)
+export default function SignUpForm() {
+  const { email, password, confirmedPassword, name } = useRecoilValue(accountState)
   const setEmail = useSetRecoilState(emailAtom)
   const setPassword = useSetRecoilState(passwordAtom)
   const setConfirmedPassword = useSetRecoilState(confirmedPasswordAtom)
   const setName = useSetRecoilState(nameAtom)
-
+  const navigate = useNavigate()
   const { error, validate } = useForm()
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const {isLoading, error: mutateError, mutate:signUp} = useSignUp({
+    onSuccess: () => {
+      navigate('/')
+    },
+    onError: () => {
 
+    },
+  })
+
+  console.log(isLoading,mutateError,signUp)
+
+  const handleSubmitForm = () => {
     const data = {
       email,
       password,
@@ -46,11 +54,22 @@ export default function SignUpForm({ onSubmit }: Props) {
     }
 
     validate(data)
-    onSubmit(data)
+    signUp(data)
+  }
+
+  const debouncedSubmit = debounce(handleSubmitForm, 200, {
+    leading:true,
+    trailing:false
+  })
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    debouncedSubmit()
   }
 
   return (
-    <form css={style} onSubmit={handleSubmit}>
+    <form css={style} onSubmit={isLoading ? undefined : handleSubmit}>
       <TextField
         value={email}
         placeholder="이메일"
@@ -91,7 +110,7 @@ export default function SignUpForm({ onSubmit }: Props) {
       />
       {error.name && <FormHelperText text={error.name} />}
 
-      <Button type="submit">회원가입</Button>
+      <Button type="submit" disabled={isLoading}>회원가입</Button>
     </form>
   )
 }
